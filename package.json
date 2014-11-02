@@ -1,0 +1,45 @@
+{
+  "name": "pluginable",
+  "version": "0.1.0",
+  "description": "Another plugin manager!",
+  "main": "pluginable.js",
+  "publishConfig": {
+    "registry": "http://registry.npmjs.org"
+  },
+  "scripts": {
+    "lint": "./node_modules/.bin/jshint .",
+    "pretest": "npm run-script lint",
+    "test": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- --recursive -R spec",
+    "posttest": "./node_modules/.bin/istanbul check-coverage && rm -rf coverage",
+    "prepublish": "npm test && npm prune"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:confuser/node-pluginable.git"
+  },
+  "keywords": [
+    "plugin",
+    "module",
+    "modular",
+    "component",
+    "auto"
+  ],
+  "author": "James Mortemore <jamesmortemore@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/confuser/node-pluginable/issues"
+  },
+  "dependencies": {
+    "async": "^0.9.0",
+    "glob": "^4.0.6",
+    "lodash.union": "^2.4.1",
+    "service-locator": "^1.0.0"
+  },
+  "devDependencies": {
+    "mocha": "~1.13.0",
+    "istanbul": "~0.1.44",
+    "async": "~0.2.9",
+    "should": "2",
+    "jshint": "~2.3.0"
+  }
+}
