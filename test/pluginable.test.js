@@ -93,4 +93,14 @@ describe('Pluginable', function () {
     })
   })
 
+  it('should only register instance if truey', function (done) {
+    pluginable('./test/fixtures/no-instance.js', function (error) {
+      should.not.exist(error)
+
+      should.not.exist(pluginable.getPlugins().noInstance)
+
+      done()
+    })
+  })
+
 })
