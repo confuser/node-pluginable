@@ -138,13 +138,13 @@ function handleDependencies(cb) {
     , error = null
 
   // TODO Optimise
-  pluginNames.forEach(function (name, i) {
+  pluginNames.forEach(function (name) {
     // Load non-dependent first
     var plugin = pluginables[name]
 
     if (!plugin.dependencies || plugin.dependencies.length === 0) {
       loadOrder.push(name)
-      toCheck.splice(i, 1)
+      toCheck.splice(toCheck.indexOf(name), 1)
     }
   })
 
