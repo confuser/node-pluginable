@@ -103,4 +103,15 @@ describe('Pluginable', function () {
     })
   })
 
+  it('should not allow registered plugins to act as a dependency before load', function (done) {
+    pluginable.getPlugins().register('asd', {})
+    pluginable('./test/fixtures/defined-dependencies.js', function (error) {
+      should.exist(error)
+
+      error.message.should.equal('manyDeps has an unknown dependency asd')
+
+      done()
+    })
+  })
+
 })
