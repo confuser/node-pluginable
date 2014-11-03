@@ -175,7 +175,8 @@ function loadAsync(plugin, cb) {
   var args = getDependencyInstances(plugin).concat(function (error, instance) {
     if (error) return cb(error)
 
-    serviceLocator.register(plugin.name, instance)
+    // Only register if truey
+    if (instance) serviceLocator.register(plugin.name, instance)
 
     cb()
   })
@@ -187,5 +188,6 @@ function loadSync(plugin) {
   var args = getDependencyInstances(plugin)
     , instance = plugin.init.apply(args)
 
-  serviceLocator.register(plugin.name, instance)
+  // Only register if truey
+  if (instance) serviceLocator.register(plugin.name, instance)
 }
