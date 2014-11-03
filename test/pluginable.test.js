@@ -24,15 +24,6 @@ describe('Pluginable', function () {
     })
   })
 
-  it('should error due to missing dependency', function (done) {
-    pluginable('./test/fixtures/news-service.js', function (error) {
-      should.exist(error)
-      error.message.should.equal('newsService has an unknown dependency db')
-
-      done()
-    })
-  })
-
   it('should error due to missing dependencies', function (done) {
     pluginable('./test/fixtures/defined-dependencies.js', function (error) {
       should.exist(error)
@@ -42,10 +33,21 @@ describe('Pluginable', function () {
     })
   })
 
+  it('should not error loading dependencies in any order', function (done) {
+    pluginable([ './test/fixtures/news-service.js', './test/fixtures/db.js' ], function (error) {
+      should.not.exist(error)
+
+      should.exist(pluginable.getPlugins().db)
+      should.exist(pluginable.getPlugins().newsService)
+
+      done()
+    })
+  })
+
   it('should error due to circular dependencies', function (done) {
     pluginable('./test/fixtures/circular-*.js', function (error) {
       should.exist(error)
-      error.message.should.equal('Possible circular dependency detected for circularA,circularB')
+      error.message.should.equal('Undefined argument found for circularB')
 
       done()
     })
@@ -103,12 +105,39 @@ describe('Pluginable', function () {
     })
   })
 
-  it('should not allow registered plugins to act as a dependency before load', function (done) {
-    pluginable.getPlugins().register('asd', {})
+  it('should allow registered plugins to act as a dependency before load', function (done) {
+    pluginable.register({ name: 'asd', init: function () { return 'test' } })
     pluginable('./test/fixtures/defined-dependencies.js', function (error) {
-      should.exist(error)
+      should.not.exist(error)
 
-      error.message.should.equal('manyDeps has an unknown dependency asd')
+      var plugins = pluginable.getPlugins()
+
+      should.exist(plugins.asd)
+
+      done()
+    })
+  })
+
+  it('should allow complicated dependency trees', function (done) {
+    pluginable('./test/fixtures/complex/*.js', function (error) {
+      should.not.exist(error)
+
+      var plugins = pluginable.getPlugins()
+        , a = plugins.a
+        , b = plugins.b
+        , c = plugins.c
+        , d = plugins.d
+
+      should.exist(a)
+      should.exist(b)
+      should.exist(c)
+      should.exist(d)
+
+      a.should.equal('test')
+      b.should.equal('testb')
+      c.should.equal('testtestbc')
+      d.should.equal('testtestbcd')
+
 
       done()
     })

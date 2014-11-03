@@ -1,6 +1,6 @@
 var glob = require('glob')
   , async = require('async')
-  , union = require('lodash.union')
+  , unique = require('lodash.uniq')
   , serviceLocator = require('service-locator')()
   , callbackNames = require('./lib/callback-names')
   , pluginables = {}
@@ -9,7 +9,22 @@ var glob = require('glob')
 module.exports = function (list, cb) {
   // TODO Don't assume it is a glob, allow other options!
   async.waterfall(
-  [ glob.bind(null, list)
+  [ function (callback) {
+      if (Array.isArray(list)) {
+        var files = []
+        async.each(list, function (pattern, eachCb) {
+          glob(pattern, function (error, found) {
+            if (error) return eachCb(error)
+            files = files.concat(found)
+            eachCb()
+          })
+        }, function (error) {
+          callback(error, files)
+        })
+      } else {
+        glob(list, callback)
+      }
+    }
   , handleFiles
   , discoverDependencies
   , validateDependencies
@@ -27,6 +42,11 @@ module.exports.reset = function () {
 
 module.exports.getPlugins = function () {
   return serviceLocator
+}
+
+module.exports.register = function (plugin) {
+  pluginNames.push(plugin.name)
+  pluginables[plugin.name] = plugin
 }
 
 function handleFiles(files, cb) {
@@ -105,6 +125,8 @@ function validateDependencies(cb) {
       }
     })
 
+    // pluginables[name] = plugin
+
     callback(error)
   }, cb)
 }
@@ -113,7 +135,6 @@ function handleDependencies(cb) {
   // TODO Look into tree structure for parallel loading where possible
   var loadOrder = []
     , toCheck = pluginNames.slice()
-    , dependencies = []
     , error = null
 
   // TODO Optimise
@@ -127,20 +148,13 @@ function handleDependencies(cb) {
     }
   })
 
+  // TODO Make this far more robust
   toCheck.forEach(function (name) {
     var plugin = pluginables[name]
-
-    dependencies.push(plugin.dependencies.concat(name))
+    loadOrder = loadOrder.concat(plugin.dependencies, name)
   })
 
-  loadOrder = union(null, loadOrder.concat(dependencies))
-
-  // Circular check
-  loadOrder.forEach(function (name) {
-    if (Array.isArray(name)) {
-      error = new Error('Possible circular dependency detected for ' + name)
-    }
-  })
+  loadOrder = unique(loadOrder)
 
   cb(error, loadOrder)
 
@@ -153,7 +167,12 @@ function load(loadOrder, cb) {
     if (plugin.async) {
       loadAsync(plugin, callback)
     } else {
-      loadSync(plugin)
+      try {
+        loadSync(plugin)
+      } catch (e) {
+        return callback(e)
+      }
+
       callback()
     }
   }, cb)
@@ -176,18 +195,35 @@ function loadAsync(plugin, cb) {
     if (error) return cb(error)
 
     // Only register if truey
-    if (instance) serviceLocator.register(plugin.name, instance)
+    if (instance) {
+      serviceLocator.register(plugin.name, instance)
+    }
 
     cb()
   })
+
+  var error = null
+
+  args.forEach(function (arg) {
+    if (typeof arg === 'undefined') error = new Error('Undefined argument found for ' + plugin.name)
+  })
+
+  if (error) return cb(error)
 
   plugin.init.apply(null, args)
 }
 
 function loadSync(plugin) {
   var args = getDependencyInstances(plugin)
-    , instance = plugin.init.apply(args)
+
+  args.forEach(function (arg) {
+    if (typeof arg === 'undefined') throw new Error('Undefined argument found for ' + plugin.name)
+  })
+
+  var instance = plugin.init.apply(null, args)
 
   // Only register if truey
-  if (instance) serviceLocator.register(plugin.name, instance)
+  if (instance) {
+    serviceLocator.register(plugin.name, instance)
+  }
 }

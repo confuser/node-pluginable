@@ -108,9 +108,16 @@ require('pluginable').reset()
 This should only be used in testing environments, as it does not allow plugins to clean up after themselves, meaning it may leave your process in an undesired state.
 
 
-### I want to dynamically load a plugin after startup?
+### I want to dynamically load a plugin instance after startup?
 ```js
 var instance = {}
 require('pluginable').getPlugins().register('theName', instance)
 ```
-It should be noted that this will simply allow you to access the plugin via getPlugins(), and not via inferred dependencies.
+It should be noted that this will simply allow you to access the plugin instance via getPlugins(), and not via inferred dependencies.
+
+### I want to dynamically load a plugin before startup?
+```js
+var plugin = { name: 'test', init: function () { return 'test' }}
+require('pluginable').register(plugin)
+```
+This allows you to register plugins for use with a dependency before executing pluginable() for example a logger instance
