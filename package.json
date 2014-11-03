@@ -2,7 +2,7 @@
   "name": "pluginable",
   "version": "0.1.1",
   "description": "Another plugin manager!",
-  "main": "pluginable.js",
+  "main": "index.js",
   "publishConfig": {
     "registry": "http://registry.npmjs.org"
   },

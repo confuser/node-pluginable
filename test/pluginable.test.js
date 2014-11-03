@@ -1,5 +1,5 @@
 var should = require('should')
-  , pluginable = require('../pluginable')
+  , pluginable = require('../')
 
 describe('Pluginable', function () {
   afterEach(function () {
