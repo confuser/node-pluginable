@@ -79,3 +79,12 @@ This should only be used in testing environments, as it does not allow plugins t
 require('pluginable').registerBeforeLoad(function test(cb) { cb() })
 ```
 This allows you to register plugins for use with a dependency before executing pluginable() for example a logger instance.
+
+### I have plugins with circular dependencies?
+Pluginable will return an error stating which plugins are affected and will not continue until it is solved.
+
+### I have a plugin dependency that isn't present?
+Pluginable will return an error stating which dependency is missing and from which plugin.
+
+### I try to break it?
+Pluginable tries to validate plugins before loading or using them. If you're really evil and come across a scenario that isn't covered, feel free to open an issue.
