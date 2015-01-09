@@ -1,3 +1,3 @@
-module.exports.name = 'manyDeps'
-module.exports.dependencies = [ 'asd' ]
-module.exports.init = function () {}
+module.exports = function manyDeps(asd, cb) {
+  cb()
+}

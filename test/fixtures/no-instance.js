@@ -1,4 +1,3 @@
-module.exports.name = 'noInstance'
-module.exports.init = function (cb) {
+module.exports = function noInstance(cb) {
   cb()
 }

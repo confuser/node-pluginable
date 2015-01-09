@@ -1,4 +1,3 @@
-module.exports.name = 'newsService'
-module.exports.init = function (db, cb) {
+module.exports = function newsService(db, cb) {
   cb(null, 'newsService')
 }

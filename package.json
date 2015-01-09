@@ -7,9 +7,10 @@
     "registry": "http://registry.npmjs.org"
   },
   "scripts": {
-    "lint": "./node_modules/.bin/jshint  . --reporter=./node_modules/jshint-full-path/index.js",
-    "pretest": "npm run-script lint",
-    "test": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- --recursive -R spec",
+    "lint": "jshint .",
+    "checkStyle": "jscs .",
+    "pretest": "npm run-script lint && npm run-script checkStyle",
+    "test": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "posttest": "./node_modules/.bin/istanbul check-coverage && rm -rf coverage",
     "prepublish": "npm test && npm prune"
   },
@@ -31,16 +32,16 @@
   },
   "dependencies": {
     "async": "^0.9.0",
-    "glob": "^4.0.6",
-    "lodash.uniq": "^2.4.1",
+    "glob": "^4.3.2",
     "service-locator": "^1.0.0"
   },
   "devDependencies": {
-    "mocha": "~1.13.0",
-    "istanbul": "~0.1.44",
-    "async": "~0.2.9",
-    "should": "2",
-    "jshint": "~2.3.0",
-    "jshint-full-path": "~0.1.0"
+    "coveralls": "^2.11.2",
+    "istanbul": "0",
+    "jscs": "1",
+    "jshint": "2",
+    "jshint-full-path": "0",
+    "mocha": "2",
+    "should": "2"
   }
 }

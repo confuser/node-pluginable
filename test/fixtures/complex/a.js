@@ -1,4 +1,3 @@
-module.exports.name = 'a'
-module.exports.init = function () {
-  return 'test'
+module.exports = function a(cb) {
+  cb(null, 'test')
 }

@@ -1,4 +1,3 @@
-module.exports.name = 'shouldError'
-module.exports.init = function (cb) {
+module.exports = function shouldError(cb) {
   cb(new Error('test'))
 }

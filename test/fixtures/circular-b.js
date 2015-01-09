@@ -1,4 +1,3 @@
-module.exports.name = 'circularB'
-module.exports.init = function (circularA) {
-  return circularA
+module.exports = function circularB(circularA, cb) {
+  cb(null, circularA)
 }

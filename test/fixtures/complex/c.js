@@ -1,6 +1,5 @@
-module.exports.name = 'c'
-module.exports.init = function (a, b) {
+module.exports = function c(a, b, cb) {
   var test = a + b + 'c'
 
-  return test
+  cb(null, test)
 }

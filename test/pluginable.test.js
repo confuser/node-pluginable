@@ -2,59 +2,48 @@ var should = require('should')
   , pluginable = require('../')
 
 describe('Pluginable', function () {
-  afterEach(function () {
-    pluginable.reset()
+
+  it('should error due to no plugins', function (done) {
+    // Yuck coffee :D
+    pluginable('*.coffee', function (error) {
+      should.exist(error)
+      error.message.should.equal('No pluginables found')
+
+      done()
+    })
   })
 
   it('should error due to missing name', function (done) {
-    pluginable('./test/fixtures/invalid-name.js', function (error) {
+    pluginable(__dirname + '/fixtures/invalid-name.js', function (error) {
       should.exist(error)
-      error.message.should.equal('No name defined in ./test/fixtures/invalid-name.js')
-
-      done()
-    })
-  })
-
-  it('should error due to non-function', function (done) {
-    pluginable('./test/fixtures/invalid-export.js', function (error) {
-      should.exist(error)
-      error.message.should.equal('Expected an exported init function in ./test/fixtures/invalid-export.js')
-
-      done()
-    })
-  })
-
-  it('should error due to missing dependencies', function (done) {
-    pluginable('./test/fixtures/defined-dependencies.js', function (error) {
-      should.exist(error)
-      error.message.should.equal('manyDeps has an unknown dependency asd')
+      error.message.should.equal('No name defined in ' + __dirname + '/fixtures/invalid-name.js')
 
       done()
     })
   })
 
   it('should not error loading dependencies in any order', function (done) {
-    pluginable([ './test/fixtures/news-service.js', './test/fixtures/db.js' ], function (error) {
+    pluginable([ __dirname + '/fixtures/news-service.js', __dirname + '/fixtures/db.js' ], function (error, plugins) {
       should.not.exist(error)
 
-      should.exist(pluginable.getPlugins().db)
-      should.exist(pluginable.getPlugins().newsService)
+      should.exist(plugins.db)
+      should.exist(plugins.newsService)
 
       done()
     })
   })
 
   it('should error due to circular dependencies', function (done) {
-    pluginable('./test/fixtures/circular-*.js', function (error) {
+    pluginable(__dirname + '/fixtures/circular-*.js', function (error) {
       should.exist(error)
-      error.message.should.equal('Undefined argument found for circularB')
+      error.message.should.equal('Circular dependencies detected for circularA, circularB')
 
       done()
     })
   })
 
   it('should load db', function (done) {
-    pluginable('./test/fixtures/db.js', function (error) {
+    pluginable(__dirname + '/fixtures/db.js', function (error) {
       should.not.exist(error)
 
       should.exist(pluginable.getPlugins().db)
@@ -64,19 +53,8 @@ describe('Pluginable', function () {
     })
   })
 
-  it('should load sync', function (done) {
-    pluginable('./test/fixtures/sync.js', function (error) {
-      should.not.exist(error)
-
-      should.exist(pluginable.getPlugins().test)
-      pluginable.getPlugins().test.should.equal('hello')
-
-      done()
-    })
-  })
-
   it('should load async', function (done) {
-    pluginable('./test/fixtures/async.js', function (error) {
+    pluginable(__dirname + '/fixtures/async.js', function (error) {
       should.not.exist(error)
 
       should.exist(pluginable.getPlugins().test)
@@ -87,7 +65,7 @@ describe('Pluginable', function () {
   })
 
   it('should error due to plugin error', function (done) {
-    pluginable('./test/fixtures/load-error.js', function (error) {
+    pluginable(__dirname + '/fixtures/load-error.js', function (error) {
       should.exist(error)
       error.message.should.equal('test')
 
@@ -96,7 +74,7 @@ describe('Pluginable', function () {
   })
 
   it('should only register instance if truey', function (done) {
-    pluginable('./test/fixtures/no-instance.js', function (error) {
+    pluginable(__dirname + '/fixtures/no-instance.js', function (error) {
       should.not.exist(error)
 
       should.not.exist(pluginable.getPlugins().noInstance)
@@ -106,8 +84,8 @@ describe('Pluginable', function () {
   })
 
   it('should allow registered plugins to act as a dependency before load', function (done) {
-    pluginable.register({ name: 'asd', init: function () { return 'test' } })
-    pluginable('./test/fixtures/defined-dependencies.js', function (error) {
+    pluginable.registerBeforeLoad(function asd(cb) { cb(null, 'test') })
+    pluginable(__dirname + '/fixtures/defined-dependencies.js', function (error) {
       should.not.exist(error)
 
       var plugins = pluginable.getPlugins()
@@ -119,7 +97,7 @@ describe('Pluginable', function () {
   })
 
   it('should allow complicated dependency trees', function (done) {
-    pluginable('./test/fixtures/complex/*.js', function (error) {
+    pluginable(__dirname + '/fixtures/complex/*.js', function (error) {
       should.not.exist(error)
 
       var plugins = pluginable.getPlugins()
@@ -138,6 +116,55 @@ describe('Pluginable', function () {
       c.should.equal('testtestbc')
       d.should.equal('testtestbcd')
 
+      done()
+    })
+  })
+
+  it('should allow soft dependencies', function (done) {
+    pluginable([ __dirname + '/fixtures/soft-depend.js', __dirname + '/fixtures/db.js' ], function (error, plugins) {
+      should.not.exist(error)
+
+      should.exist(plugins.db)
+      should.exist(plugins.softDependTest)
+
+      plugins.softDependTest.should.equal('databasetest')
+
+      done()
+    })
+  })
+
+  it('should return an undefined argument error', function (done) {
+    pluginable([ __dirname + '/fixtures/undefined-argument.js', __dirname + '/fixtures/no-instance.js' ], function (error) {
+      should.exist(error)
+
+      error.message.should.equal('Undefined argument found for undefinedArg')
+
+      done()
+    })
+  })
+
+  it('should return a no callback defined error', function (done) {
+    pluginable(__dirname + '/fixtures/no-callback.js', function (error) {
+      should.exist(error)
+      error.message.should.equal('No callback argument found for noCallback')
+
+      done()
+    })
+  })
+
+  it('should not allow a plugin to be named register', function (done) {
+    pluginable(__dirname + '/fixtures/invalid-register.js', function (error) {
+      should.exist(error)
+      error.message.should.equal('Plugin cannot be named register')
+
+      done()
+    })
+  })
+
+  it('should return an unknown dependency error', function (done) {
+    pluginable(__dirname + '/fixtures/news-service.js', function (error) {
+      should.exist(error)
+      error.message.should.equal('newsService has an unknown dependency db')
 
       done()
     })
