@@ -1,6 +1,6 @@
 {
   "name": "pluginable",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Another plugin manager!",
   "main": "index.js",
   "publishConfig": {
