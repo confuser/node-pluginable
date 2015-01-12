@@ -180,4 +180,88 @@ describe('Pluginable', function () {
     })
   })
 
+  it('should emit a beforeLoad event', function (done) {
+    pluginable.once('beforeLoad', function (plugin) {
+      should.exist(plugin)
+      plugin.name.should.equal('db')
+
+      done()
+    })
+
+    pluginable(__dirname + '/fixtures/db.js', function () {})
+  })
+
+  it('should emit a plugin specific beforeLoad event', function (done) {
+    pluginable.once('beforeLoad:db', function (plugin) {
+      should.exist(plugin)
+      plugin.name.should.equal('db')
+
+      done()
+    })
+
+    pluginable(__dirname + '/fixtures/db.js', function () {})
+  })
+
+  it('should emit an afterLoad event', function (done) {
+    pluginable.once('afterLoad', function (plugin, instance) {
+      should.exist(plugin)
+      plugin.name.should.equal('db')
+      instance.should.equal('database')
+
+      done()
+    })
+
+    pluginable(__dirname + '/fixtures/db.js', function () {})
+  })
+
+  it('should emit a plugin specific afterLoad event', function (done) {
+    pluginable.once('afterLoad:db', function (plugin, instance) {
+      should.exist(plugin)
+      plugin.name.should.equal('db')
+      instance.should.equal('database')
+
+      done()
+    })
+
+    pluginable(__dirname + '/fixtures/db.js', function () {})
+  })
+
+  it('should emit a beforeFinished event', function (done) {
+    pluginable.once('beforeFinished', function (instances) {
+      should.exist(instances)
+      should.exist(instances.db)
+      instances.db.should.equal('database')
+
+      done()
+    })
+
+    pluginable(__dirname + '/fixtures/db.js', function () {})
+  })
+
+  it('should emit an afterFinished event', function (done) {
+    pluginable.on('afterFinished', function (instances) {
+      should.exist(instances)
+      should.exist(instances.db)
+      instances.db.should.equal('database')
+
+      done()
+    })
+
+    pluginable(__dirname + '/fixtures/db.js', function () {})
+  })
+
+  it('should allow removal of all listeners', function (done) {
+    pluginable.on('afterFinished', function () {
+      done()
+    })
+
+    pluginable.removeAllListeners()
+
+    pluginable.on('afterFinished', function () {
+      done()
+    })
+
+    pluginable(__dirname + '/fixtures/db.js', function () {})
+  })
+
 })

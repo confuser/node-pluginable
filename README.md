@@ -56,6 +56,45 @@ The last argument of your function will always be assumed to be the callback(err
 
 Note: The plugin will only be registered if the returned instance is truey
 
+## Events
+Registered before pluginable is initialised, or within a plugin itself via `on` or `once`.
+
+Only emitted if no errors, e.g. an afterLoad will not emit if a plugin returns an error.
+
+```js
+var pluginable = require('pluginable')
+
+pluginable.on('beforeLoad', function (plugin) {
+  console.log(plugin.name)
+})
+
+pluginable('*', function (error) {
+  console.log('Plugins loaded')
+})
+```
+
+```js
+var pluginable = require('pluginable')
+
+pluginable.on('eventName')
+
+module.exports = function pluginName() {
+  pluginable.on('eventName')
+}
+```
+
+* `beforeLoad(plugin)` - Emitted before each plugin is loaded.
+
+* `beforeLoad:pluginName(plugin)` - Emitted before the specified plugin is loaded.
+
+* `afterLoad(plugin, instance)` - Emitted after each plugin is loaded.
+
+* `afterLoad:pluginName(plugin, instance)` - Emitted after the specified plugin is loaded.
+
+* `beforeFinished(pluginInstances)` - Emitted before the pluginable callback is called.
+
+* `afterFinished(pluginInstances)` - Emitted after the pluginable callback is called.
+
 ## What if...
 
 ### I want to access other plugins but not be dependent on them?

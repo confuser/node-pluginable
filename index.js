@@ -5,9 +5,11 @@ var glob = require('glob')
   , validatePlugin = require('./lib/validate-plugin')
   , beforeLoad = []
   , createServiceLocator = require('service-locator')
+  , EventEmitter = require('events').EventEmitter
+  , eventEmitter = new EventEmitter()
   , serviceLocator
 
-module.exports = function (list, cb) {
+module.exports = function pluginable(list, cb) {
   serviceLocator = createServiceLocator()
 
   // TODO Don't assume it is a glob, allow other options!
@@ -48,13 +50,18 @@ module.exports = function (list, cb) {
       })
     }
   , preloadPlugins
-  , loadPlugins.bind(null, serviceLocator)
+  , loadPlugins.bind(null, serviceLocator, eventEmitter)
   ], function (error, instances) {
     if (error) return cb(error)
 
     serviceLocator = instances
 
+    eventEmitter.emit('beforeFinished', instances)
+
     cb(null, instances)
+
+    // Code smell?
+    eventEmitter.emit('afterFinished', instances)
   })
 }
 
@@ -64,4 +71,17 @@ module.exports.getPlugins = function () {
 
 module.exports.registerBeforeLoad = function (plugin) {
   beforeLoad.push(plugin)
+}
+
+// Code smells :(
+module.exports.on = function (eventName, listener) {
+  return eventEmitter.on(eventName, listener)
+}
+
+module.exports.once = function (eventName, listener) {
+  return eventEmitter.once(eventName, listener)
+}
+
+module.exports.removeAllListeners = function () {
+  eventEmitter.removeAllListeners()
 }
