@@ -170,4 +170,14 @@ describe('Pluginable', function () {
     })
   })
 
+  it('should return a duplicate error', function (done) {
+    pluginable([ __dirname + '/fixtures/db.js', __dirname + '/fixtures/db.js' ], function (error) {
+      should.exist(error)
+
+      error.message.should.equal('Duplicate plugin names detected db')
+
+      done()
+    })
+  })
+
 })
