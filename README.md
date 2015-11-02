@@ -15,10 +15,13 @@ npm install pluginable --save
 ## Usage
 ```js
 var pluginable = require('pluginable')
-  , globList = './**/pluginable.js'
 
-pluginable(globList, function (error) {
-  console.log('Plugins loaded')
+glob('./**/pluginable.js', funcion (error, files) {
+  var pluginLoader = pluginable(files)
+
+  pluginLoader.load(function (error) {
+    console.log('Plugins loaded')
+  })
 })
 ```
 
@@ -63,23 +66,20 @@ Only emitted if no errors, e.g. an afterLoad will not emit if a plugin returns a
 
 ```js
 var pluginable = require('pluginable')
+var pluginLoader = pluginable(files)
 
-pluginable.on('beforeLoad', function (plugin) {
+pluginLoader.on('beforeLoad', function (plugin) {
   console.log(plugin.name)
 })
 
-pluginable('*', function (error) {
+pluginLoader.load(function (error) {
   console.log('Plugins loaded')
 })
 ```
 
 ```js
-var pluginable = require('pluginable')
-
-pluginable.on('eventName')
-
 module.exports = function pluginName() {
-  pluginable.on('eventName')
+  this.on('eventName', function () { })
 }
 ```
 
@@ -99,25 +99,27 @@ module.exports = function pluginName() {
 
 ### I want to access other plugins but not be dependent on them?
 ```js
-var pluginable = require('pluginable')
-
 module.exports = function theName(db, cb) {
   // Will output instance value of 'test' if present
-  console.log(pluginable.getPlugins().test)
+  console.log(this.plugins.test)
   cb(null, { test: 'hello' })
 }
 module.exports.softDepend = [ 'test' ]
 ```
 
 ### I want to clear the plugins?
-Initalise pluginable(globList, cb) again.
-This should only be used in testing environments, as it does not allow plugins to clean up after themselves, meaning it may leave your process in an undesired state.
+Pluginable is newless OO. Allowing the reference to be garbage collected should suffice.
 
 ### I want to dynamically load a plugin before startup?
 ```js
-require('pluginable').registerBeforeLoad(function test(cb) { cb() })
+var pluginLoader = require('pluginable')(files)
+pluginLoader.registerBeforeLoad(function test(cb) { cb() })
+
+pluginLoader.load(function (error, plugins) {
+  console.log(error, plugins)
+})
 ```
-This allows you to register plugins for use with a dependency before executing pluginable() for example a logger instance.
+This allows you to register plugins for use with a dependency before executing load(), for example a logger instance.
 
 ### I have plugins with circular dependencies?
 Pluginable will return an error stating which plugins are affected and will not continue until it is solved.

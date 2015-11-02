@@ -1,7 +1,5 @@
-var pluginable = require('../../')
-
 module.exports = function softDependTest(cb) {
-  cb(null, pluginable.getPlugins().db + 'test')
+  cb(null, this.plugins.db + 'test')
 }
 
 module.exports.softDepend = [ 'db' ]

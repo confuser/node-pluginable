@@ -1,40 +1,29 @@
-var glob = require('glob')
-  , async = require('async')
+var async = require('async')
+  , util = require('util')
+  , EventEmitter = require('events').EventEmitter
   , preloadPlugins = require('./lib/preload-plugins')
   , loadPlugins = require('./lib/load-plugins')
   , validatePlugin = require('./lib/validate-plugin')
-  , beforeLoad = []
-  , createServiceLocator = require('service-locator')
-  , EventEmitter = require('events').EventEmitter
-  , eventEmitter = new EventEmitter()
-  , serviceLocator
 
-module.exports = function pluginable(list, cb) {
-  serviceLocator = createServiceLocator()
+function Pluginable(files) {
+  this.files = files;
+  this.beforeLoad = []
 
-  // TODO Don't assume it is a glob, allow other options!
+  EventEmitter.call(this);
+}
+
+util.inherits(Pluginable, EventEmitter);
+
+Pluginable.prototype.load = function(cb) {
+  var self = this;
+
   async.waterfall(
   [ function (cb) {
-      if (Array.isArray(list)) {
-        var files = []
-        async.each(list, function (pattern, eachCb) {
-          glob(pattern, function (error, found) {
-            files = files.concat(found)
-            eachCb(error)
-          })
-        }, function (error) {
-          cb(error, files)
-        })
-      } else {
-        glob(list, cb)
-      }
-    }
-  , function (files, cb) {
-      if (!files || files.length === 0) return cb(new Error('No pluginables found'))
+      if (!self.files || self.files.length === 0) return cb(new Error('No plugins found'))
 
       var plugins = []
 
-      async.each(files, function (file, callback) {
+      async.each(self.files, function (file, callback) {
         validatePlugin(file, function (error, plugin) {
           if (error) return callback(error)
 
@@ -43,45 +32,30 @@ module.exports = function pluginable(list, cb) {
           callback()
         })
       }, function (error) {
-        plugins = plugins.concat(beforeLoad)
-        beforeLoad = []
+        plugins = plugins.concat(self.beforeLoad)
+        self.beforeLoad = []
 
         cb(error, plugins)
       })
     }
   , preloadPlugins
-  , loadPlugins.bind(null, serviceLocator, eventEmitter)
+  , loadPlugins.bind(self)
   ], function (error, instances) {
     if (error) return cb(error)
 
-    serviceLocator = instances
-
-    eventEmitter.emit('beforeFinished', instances)
+    self.emit('beforeFinished', instances)
 
     cb(null, instances)
 
     // Code smell?
-    eventEmitter.emit('afterFinished', instances)
+    self.emit('afterFinished', instances)
   })
+};
+
+Pluginable.prototype.registerBeforeLoad = function (plugin) {
+  this.beforeLoad.push(plugin)
 }
 
-module.exports.getPlugins = function () {
-  return serviceLocator
-}
-
-module.exports.registerBeforeLoad = function (plugin) {
-  beforeLoad.push(plugin)
-}
-
-// Code smells :(
-module.exports.on = function (eventName, listener) {
-  return eventEmitter.on(eventName, listener)
-}
-
-module.exports.once = function (eventName, listener) {
-  return eventEmitter.once(eventName, listener)
-}
-
-module.exports.removeAllListeners = function () {
-  eventEmitter.removeAllListeners()
+module.exports = function (files) {
+  return new Pluginable(files);
 }

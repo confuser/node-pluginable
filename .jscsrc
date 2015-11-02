@@ -7,7 +7,7 @@
 , "requireMultipleVarDecl": true
 , "disallowEmptyBlocks": true
 , "disallowSpaceAfterObjectKeys": true
-, "disallowCommaBeforeLineBreak": true
+, "disallowCommaBeforeLineBreak": false
 , "disallowTrailingWhitespace": true
 , "requireCapitalizedConstructors": true
 , "requireSpacesInsideObjectBrackets": "all"
@@ -22,4 +22,5 @@
 , "requireSpaceAfterBinaryOperators": [ "+", "-", "/", "*", "=", "==", "===", "!=", "!==" ]
 , "disallowKeywordsOnNewLine": [ "else" ]
 , "requireSpacesInFunctionExpression": { "beforeOpeningCurlyBrace": true }
+, "requireSpaceAfterComma": true
 }
