@@ -121,6 +121,20 @@ pluginLoader.load(function (error, plugins) {
 ```
 This allows you to register plugins for use with a dependency before executing load(), for example a logger instance.
 
+### I want to use this pattern with other functions after load?
+```js
+var pluginLoader = require('pluginable')(files)
+
+pluginLoader.load(function (error, plugins) {
+  var fn = pluginLoader.bond(function hello(pluginA, pluginB) {
+    console.log(pluginA, pluginB)
+  })
+
+  fn()
+})
+```
+Note, `bond` will throw an error if a dependency is unmet.
+
 ### I have plugins with circular dependencies?
 Pluginable will return an error stating which plugins are affected and will not continue until it is solved.
 

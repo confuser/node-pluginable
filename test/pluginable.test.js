@@ -319,4 +319,48 @@ describe('Pluginable', function () {
     })
   })
 
+  describe('#bond', function () {
+
+    it('should allow binding of dependencies dynamically', function (done) {
+      var pluginLoader = pluginable([ __dirname + '/fixtures/db.js' ])
+
+      pluginLoader.load(function () {
+        pluginLoader.bond(function hello(db) {
+          assert.equal(db, 'database')
+
+          done()
+        })()
+      })
+
+    })
+
+    it('should throw an error if dependencies missing', function (done) {
+      var pluginLoader = pluginable([ __dirname + '/fixtures/db.js' ])
+
+      pluginLoader.load(function () {
+        try {
+          pluginLoader.bond(function hello(bye) { bye.toString() })
+        } catch (e) {
+          assert.equal(e.message, 'bound hello has an unknown dependency bye')
+        }
+
+        done()
+      })
+    })
+
+    it('should bind pluginable even if no dependencies', function (done) {
+      var pluginLoader = pluginable([ __dirname + '/fixtures/db.js' ])
+
+      pluginLoader.load(function () {
+        pluginLoader.bond(function hello() {
+          assert.equal(this.plugins.db, 'database')
+
+          done()
+        })()
+      })
+
+    })
+
+  })
+
 })
